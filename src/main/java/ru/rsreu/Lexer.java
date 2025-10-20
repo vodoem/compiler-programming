@@ -32,27 +32,27 @@ public class Lexer {
             }
             switch (c) {
                 case '+':
-                    tokens.add(new Token(TokenType.PLUS, "+"));
+                    tokens.add(new Token(TokenType.PLUS, "+", pos + 1));
                     advance();
                     break;
                 case '-':
-                    tokens.add(new Token(TokenType.MINUS, "-"));
+                    tokens.add(new Token(TokenType.MINUS, "-", pos + 1));
                     advance();
                     break;
                 case '*':
-                    tokens.add(new Token(TokenType.MULTIPLY, "*"));
+                    tokens.add(new Token(TokenType.MULTIPLY, "*", pos + 1));
                     advance();
                     break;
                 case '/':
-                    tokens.add(new Token(TokenType.DIVIDE, "/"));
+                    tokens.add(new Token(TokenType.DIVIDE, "/", pos + 1));
                     advance();
                     break;
                 case '(':
-                    tokens.add(new Token(TokenType.LPAREN, "("));
+                    tokens.add(new Token(TokenType.LPAREN, "(", pos + 1));
                     advance();
                     break;
                 case ')':
-                    tokens.add(new Token(TokenType.RPAREN, ")"));
+                    tokens.add(new Token(TokenType.RPAREN, ")", pos + 1));
                     advance();
                     break;
                 default:
@@ -71,7 +71,7 @@ public class Lexer {
         }
         String name = sb.toString();
         int id = symbolTable.getOrAdd(name);
-        tokens.add(new Token(TokenType.IDENTIFIER, new Identifier(id, name)));
+        tokens.add(new Token(TokenType.IDENTIFIER, new Identifier(id, name), start + 1));
     }
 
     private void lexNumberOrErrorIfFollowedByLetters() throws LexicalException {
@@ -102,9 +102,9 @@ public class Lexer {
                 int errPos = start + 1;
                 throw new LexicalException(String.format("Лексическая ошибка! Неправильно задана константа «%s» на позиции %d", numLexeme, errPos), errPos);
             }
-            tokens.add(new Token(TokenType.REAL_CONST, Double.parseDouble(numLexeme)));
+            tokens.add(new Token(TokenType.REAL_CONST, Double.parseDouble(numLexeme), start + 1));
         } else {
-            tokens.add(new Token(TokenType.INTEGER_CONST, Integer.parseInt(numLexeme)));
+            tokens.add(new Token(TokenType.INTEGER_CONST, Integer.parseInt(numLexeme), start + 1));
         }
     }
 
