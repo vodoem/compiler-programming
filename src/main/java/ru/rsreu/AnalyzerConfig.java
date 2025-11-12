@@ -16,4 +16,8 @@ public record AnalyzerConfig(
     public boolean isSynMode() {
         return mode == AnalyzerMode.SYN;
     }
+
+    public boolean isSemMode() {
+        return mode == AnalyzerMode.SEM;
+    }
 }

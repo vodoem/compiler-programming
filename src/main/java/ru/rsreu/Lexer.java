@@ -62,7 +62,7 @@ public class Lexer {
         }
     }
 
-    private void lexIdentifier() {
+    private void lexIdentifier() throws LexicalException {
         int start = pos;
         StringBuilder sb = new StringBuilder();
         sb.append(advance());
@@ -70,8 +70,27 @@ public class Lexer {
             sb.append(advance());
         }
         String name = sb.toString();
-        int id = symbolTable.getOrAdd(name);
-        tokens.add(new Token(TokenType.IDENTIFIER, new Identifier(id, name), start + 1));
+        VariableType type = VariableType.INTEGER;
+        boolean explicit = false;
+        if (!isAtEnd() && peek() == '[') {
+            explicit = true;
+            advance();
+            if (isAtEnd()) {
+                throw new LexicalException(String.format("Лексическая ошибка! Не указан тип для идентификатора '%s'", name), pos + 1);
+            }
+            char typeChar = advance();
+            try {
+                type = VariableType.fromSpecifier(typeChar);
+            } catch (IllegalArgumentException e) {
+                throw new LexicalException(String.format("Лексическая ошибка! Неизвестный тип '%c' для идентификатора '%s'", typeChar, name), pos);
+            }
+            if (isAtEnd() || peek() != ']') {
+                throw new LexicalException(String.format("Лексическая ошибка! Отсутствует закрывающая скобка типа у идентификатора '%s'", name), pos + 1);
+            }
+            advance();
+        }
+        Identifier identifier = symbolTable.register(name, type, explicit, start + 1);
+        tokens.add(new Token(TokenType.IDENTIFIER, identifier, start + 1));
     }
 
     private void lexNumberOrErrorIfFollowedByLetters() throws LexicalException {
