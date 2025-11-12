@@ -16,6 +16,7 @@ public class Validator {
         return switch (mode) {
             case LEX -> validateLexArgs(args);
             case SYN -> validateSynArgs(args);
+            case SEM -> validateSemArgs(args);
         };
     }
 
@@ -51,6 +52,23 @@ public class Validator {
         ensureInputFileValid(inputPath);
 
         return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile));
+    }
+
+    private static AnalyzerConfig validateSemArgs(String[] args) {
+        if (args.length != 3) {
+            throw new ValidationException("Для режима SEM ожидается 3 аргумента: режим, входной файл, syntax_tree_mod");
+        }
+
+        String inputFile = args[1];
+        String treeFile = args[2];
+
+        validateFileName(inputFile);
+        validateFileName(treeFile);
+
+        Path inputPath = Path.of(inputFile);
+        ensureInputFileValid(inputPath);
+
+        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile));
     }
 
     private static void ensureInputFileValid(Path inputPath) {

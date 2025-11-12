@@ -17,9 +17,12 @@ public class OutputWriter {
 
     public void writeSymbols(Path symbolsFile, SymbolTable table) throws IOException {
         StringBuilder sb = new StringBuilder();
-        List<String> identifiers = table.getAll();
-        for (int i = 0; i < identifiers.size(); i++) {
-            sb.append(String.format("%d - %s%n", i+1, identifiers.get(i)));
+        List<TableFields> identifiers = table.getAll();
+        for (TableFields entry : identifiers) {
+            sb.append(String.format("%d - %s [%s]%n",
+                    entry.id(),
+                    entry.name(),
+                    entry.type().symbolDescription()));
         }
         Files.writeString(symbolsFile, sb.toString());
     }

@@ -7,7 +7,10 @@ public record Token(TokenType type, Object lexeme, int position) {
         return switch (type) {
             case IDENTIFIER -> {
                 Identifier id = (Identifier) lexeme;
-                yield String.format("<id,%d> - идентификатор с именем %s", id.id(), id.name());
+                yield String.format("<id,%d> - идентификатор с именем %s %s типа",
+                        id.id(),
+                        id.name(),
+                        id.type().tokenDescription());
             }
             case INTEGER_CONST -> String.format("<%s> - константа целого типа", lexeme);
             case REAL_CONST -> String.format("<%s> - константа вещественного типа", lexeme);

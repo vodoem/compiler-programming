@@ -12,6 +12,10 @@ public class OperandNode extends AstNode {
         this.token = token;
     }
 
+    public Token token() {
+        return token;
+    }
+
     @Override
     public String label() {
         return token.compactRepresentation();
