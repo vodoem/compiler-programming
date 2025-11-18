@@ -25,12 +25,20 @@ public class Main {
             if (config.isLexMode()) {
                 writeLexicalOutput(lexer, config.tokens(), config.symbols());
                 printLexicalSummary(lexer);
-            } else {
+            } else if (config.isSynMode()) {
                 Parser parser = new Parser(lexer.getTokens());
                 AstNode syntaxTree = parser.parse();
                 SyntaxTreeWriter writer = new SyntaxTreeWriter();
                 writer.write(config.syntaxTree(), syntaxTree);
                 System.out.println("Синтаксический анализ завершён успешно.");
+            } else if (config.isSemMode()) {
+                Parser parser = new Parser(lexer.getTokens());
+                AstNode syntaxTree = parser.parse();
+                SemanticAnalyzer analyzer = new SemanticAnalyzer();
+                AstNode modifiedTree = analyzer.analyze(syntaxTree);
+                SyntaxTreeWriter writer = new SyntaxTreeWriter();
+                writer.write(config.syntaxTree(), modifiedTree);
+                System.out.println("Семантический анализ завершён успешно.");
             }
             return 0;
 
@@ -43,6 +51,9 @@ public class Main {
         } catch (SyntaxException se) {
             System.err.println(se.getMessage());
             return 7;
+        } catch (SemanticException se) {
+            System.err.println(se.getMessage());
+            return 8;
         } catch (IOException e) {
             System.err.println("Ошибка ввода/вывода: " + e.getMessage());
             return 5;

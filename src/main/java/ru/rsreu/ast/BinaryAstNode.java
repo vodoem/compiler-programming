@@ -15,6 +15,18 @@ public class BinaryAstNode extends AstNode {
         this.right = right;
     }
 
+    public Token operator() {
+        return operator;
+    }
+
+    public AstNode left() {
+        return left;
+    }
+
+    public AstNode right() {
+        return right;
+    }
+
     @Override
     public String label() {
         return operator.compactRepresentation();
