@@ -26,4 +26,25 @@ public class OutputWriter {
         }
         Files.writeString(symbolsFile, sb.toString());
     }
+
+    public void writePortableCode(Path output, List<String> instructions) throws IOException {
+        String content = String.join(System.lineSeparator(), instructions);
+        Files.writeString(output, content);
+    }
+
+    public void writePostfix(Path output, List<String> postfix) throws IOException {
+        String content = String.join(" ", postfix);
+        Files.writeString(output, content);
+    }
+
+    public void writeCodeSymbols(Path symbolsFile, SymbolTable table) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (TableFields entry : table.getAll()) {
+            sb.append(String.format("<id,%d> - %s, %s%n",
+                    entry.id(),
+                    entry.name(),
+                    entry.type().codeName()));
+        }
+        Files.writeString(symbolsFile, sb.toString());
+    }
 }

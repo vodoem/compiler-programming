@@ -7,7 +7,9 @@ public record AnalyzerConfig(
         Path input,
         Path tokens,
         Path symbols,
-        Path syntaxTree
+        Path syntaxTree,
+        Path portableCode,
+        Path postfix
 ) {
     public boolean isLexMode() {
         return mode == AnalyzerMode.LEX;
@@ -19,5 +21,13 @@ public record AnalyzerConfig(
 
     public boolean isSemMode() {
         return mode == AnalyzerMode.SEM;
+    }
+
+    public boolean isGen1Mode() {
+        return mode == AnalyzerMode.GEN1;
+    }
+
+    public boolean isGen2Mode() {
+        return mode == AnalyzerMode.GEN2;
     }
 }
