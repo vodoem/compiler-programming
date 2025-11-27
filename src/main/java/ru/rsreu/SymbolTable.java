@@ -12,6 +12,9 @@ public class SymbolTable {
             if (explicitType && existing.type() != type) {
                 throw new LexicalException(String.format("Идентификатор '%s' уже объявлен с типом %s", name, existing.type().symbolDescription()), position);
             }
+            if (!explicitType && existing.type() != VariableType.INTEGER) {
+                throw new LexicalException(String.format("Идентификатор '%s' уже объявлен с типом %s", name, existing.type().symbolDescription()), position);
+            }
             return new Identifier(existing.id(), existing.name(), existing.type());
         }
 
