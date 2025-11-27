@@ -74,41 +74,47 @@ public class Validator {
     }
 
     private static AnalyzerConfig validateGen1Args(String[] args) {
-        if (args.length != 4) {
-            throw new ValidationException("Для режима GEN1 ожидается 4 аргумента: режим, входной файл, portable_code, symbols");
+        if (args.length != 2) {
+            throw new ValidationException("Для режима GEN1 ожидается 2 аргумента: режим и входной файл");
         }
 
         String inputFile = args[1];
-        String codeFile = args[2];
-        String symbolsFile = args[3];
 
         validateFileName(inputFile);
-        validateFileName(codeFile);
-        validateFileName(symbolsFile);
 
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.GEN1, inputPath, null, Path.of(symbolsFile), null, Path.of(codeFile), null);
+        return new AnalyzerConfig(
+                AnalyzerMode.GEN1,
+                inputPath,
+                null,
+                Path.of("symbols.txt"),
+                null,
+                Path.of("portable_code.txt"),
+                null);
     }
 
     private static AnalyzerConfig validateGen2Args(String[] args) {
-        if (args.length != 4) {
-            throw new ValidationException("Для режима GEN2 ожидается 4 аргумента: режим, входной файл, postfix, symbols");
+        if (args.length != 2) {
+            throw new ValidationException("Для режима GEN2 ожидается 2 аргумента: режим и входной файл");
         }
 
         String inputFile = args[1];
-        String postfixFile = args[2];
-        String symbolsFile = args[3];
 
         validateFileName(inputFile);
-        validateFileName(postfixFile);
-        validateFileName(symbolsFile);
 
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.GEN2, inputPath, null, Path.of(symbolsFile), null, null, Path.of(postfixFile));
+        return new AnalyzerConfig(
+                AnalyzerMode.GEN2,
+                inputPath,
+                null,
+                Path.of("symbols.txt"),
+                null,
+                null,
+                Path.of("postfix.txt"));
     }
 
     private static void ensureInputFileValid(Path inputPath) {
