@@ -16,7 +16,7 @@ public class CodeGenerator {
         this.symbolTable = symbolTable;
     }
 
-    public List<String> generate(AstNode root) {
+    public List<String> generate(AstNode root) throws SemanticException {
         process(root);
         return instructions;
     }
@@ -25,7 +25,7 @@ public class CodeGenerator {
         return instructions;
     }
 
-    private ExpressionResult process(AstNode node) {
+    private ExpressionResult process(AstNode node) throws SemanticException {
         if (node instanceof OperandNode operandNode) {
             return buildOperandResult(operandNode);
         }
@@ -56,7 +56,7 @@ public class CodeGenerator {
         throw new SemanticException("Семантическая ошибка: неизвестный тип узла дерева");
     }
 
-    private ExpressionResult buildOperandResult(OperandNode operandNode) {
+    private ExpressionResult buildOperandResult(OperandNode operandNode) throws SemanticException {
         Token token = operandNode.token();
         return switch (token.type()) {
             case IDENTIFIER -> {
@@ -69,7 +69,7 @@ public class CodeGenerator {
         };
     }
 
-    private String toOpcode(TokenType type) {
+    private String toOpcode(TokenType type) throws SemanticException {
         return switch (type) {
             case PLUS -> "add";
             case MINUS -> "sub";

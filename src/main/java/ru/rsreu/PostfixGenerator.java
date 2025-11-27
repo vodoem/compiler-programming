@@ -10,13 +10,13 @@ import java.util.List;
 
 public class PostfixGenerator {
 
-    public List<String> generate(AstNode root) {
+    public List<String> generate(AstNode root) throws SemanticException {
         List<String> output = new ArrayList<>();
         traverse(root, output);
         return output;
     }
 
-    private void traverse(AstNode node, List<String> output) {
+    private void traverse(AstNode node, List<String> output) throws SemanticException {
         if (node instanceof OperandNode operandNode) {
             output.add(operandNode.token().compactRepresentation());
             return;
