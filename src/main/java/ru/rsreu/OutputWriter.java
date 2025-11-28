@@ -3,6 +3,7 @@ package ru.rsreu;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 import java.util.List;
 
 public class OutputWriter {
@@ -27,8 +28,10 @@ public class OutputWriter {
         Files.writeString(symbolsFile, sb.toString());
     }
 
-    public void writePortableCode(Path output, List<String> instructions) throws IOException {
-        String content = String.join(System.lineSeparator(), instructions);
+    public void writePortableCode(Path output, List<ThreeAddressInstruction> instructions) throws IOException {
+        String content = instructions.stream()
+                .map(ThreeAddressInstruction::toString)
+                .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(output, content);
     }
 

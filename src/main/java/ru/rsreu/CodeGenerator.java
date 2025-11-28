@@ -10,18 +10,18 @@ import java.util.List;
 
 public class CodeGenerator {
     private final SymbolTable symbolTable;
-    private final List<String> instructions = new ArrayList<>();
+    private final List<ThreeAddressInstruction> instructions = new ArrayList<>();
 
     public CodeGenerator(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
     }
 
-    public List<String> generate(AstNode root) throws SemanticException {
+    public List<ThreeAddressInstruction> generate(AstNode root) throws SemanticException {
         process(root);
         return instructions;
     }
 
-    public List<String> getInstructions() {
+    public List<ThreeAddressInstruction> getInstructions() {
         return instructions;
     }
 
@@ -34,7 +34,7 @@ public class CodeGenerator {
             ExpressionResult child = process(conversionNode.child());
             Identifier temp = symbolTable.registerTemporary(VariableType.REAL);
             String resultRef = formatIdentifier(temp.id());
-            instructions.add(String.format("i2f %s %s", resultRef, child.reference()));
+            instructions.add(new ThreeAddressInstruction("i2f", resultRef, child.reference(), null));
             return new ExpressionResult(resultRef, VariableType.REAL);
         }
 
@@ -49,7 +49,7 @@ public class CodeGenerator {
             Identifier temp = symbolTable.registerTemporary(resultType);
             String resultRef = formatIdentifier(temp.id());
             String opcode = toOpcode(binaryNode.operator().type());
-            instructions.add(String.format("%s %s %s %s", opcode, resultRef, left.reference(), right.reference()));
+            instructions.add(new ThreeAddressInstruction(opcode, resultRef, left.reference(), right.reference()));
             return new ExpressionResult(resultRef, resultType);
         }
 
