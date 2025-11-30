@@ -79,20 +79,20 @@ public class AstOptimizer {
         Object foldedValue = switch (node.operator().type()) {
             case PLUS -> resultType == VariableType.REAL
                     ? toDouble(leftVal) + toDouble(rightVal)
-                    : (Integer) leftVal + (Integer) rightVal;
+                    : toInt(leftVal) + toInt(rightVal);
             case MINUS -> resultType == VariableType.REAL
                     ? toDouble(leftVal) - toDouble(rightVal)
-                    : (Integer) leftVal - (Integer) rightVal;
+                    : toInt(leftVal) - toInt(rightVal);
             case MULTIPLY -> resultType == VariableType.REAL
                     ? toDouble(leftVal) * toDouble(rightVal)
-                    : (Integer) leftVal * (Integer) rightVal;
+                    : toInt(leftVal) * toInt(rightVal);
             case DIVIDE -> {
                 if (isZero(right)) {
                     throw new SemanticException("Семантическая ошибка: обнаружено деление на константу 0");
                 }
                 yield resultType == VariableType.REAL
                         ? toDouble(leftVal) / toDouble(rightVal)
-                        : (Integer) leftVal / (Integer) rightVal;
+                        : toInt(leftVal) / toInt(rightVal);
             }
             default -> throw new SemanticException("Семантическая ошибка: неизвестный оператор при оптимизации");
         };
@@ -168,6 +168,10 @@ public class AstOptimizer {
 
     private double toDouble(Object value) {
         return value instanceof Integer integer ? integer.doubleValue() : (Double) value;
+    }
+
+    private int toInt(Object value) {
+        return ((Number) value).intValue();
     }
 
     private AstNode createConstantNode(TokenType type, Object value) {
