@@ -5,6 +5,7 @@ import java.util.*;
 public class SymbolTable {
     private final List<TableFields> identifiers = new ArrayList<>();
     private final Map<String, TableFields> entriesByName = new HashMap<>();
+    private int tempCounter = 0;
 
     public Identifier register(String name, VariableType type, boolean explicitType, int position) throws LexicalException {
         TableFields existing = entriesByName.get(name);
@@ -21,6 +22,16 @@ public class SymbolTable {
         VariableType finalType = explicitType ? type : VariableType.INTEGER;
         int newId = identifiers.size() + 1;
         TableFields entry = new TableFields(newId, name, finalType);
+        identifiers.add(entry);
+        entriesByName.put(name, entry);
+        return new Identifier(entry.id(), entry.name(), entry.type());
+    }
+
+    public Identifier registerTemporary(VariableType type) {
+        tempCounter++;
+        String name = "#T" + tempCounter;
+        int newId = identifiers.size() + 1;
+        TableFields entry = new TableFields(newId, name, type);
         identifiers.add(entry);
         entriesByName.put(name, entry);
         return new Identifier(entry.id(), entry.name(), entry.type());

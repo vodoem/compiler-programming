@@ -39,6 +39,27 @@ public class Main {
                 SyntaxTreeWriter writer = new SyntaxTreeWriter();
                 writer.write(config.syntaxTree(), modifiedTree);
                 System.out.println("Семантический анализ завершён успешно.");
+            } else if (config.isGen1Mode()) {
+                Parser parser = new Parser(lexer.getTokens());
+                AstNode syntaxTree = parser.parse();
+                SemanticAnalyzer analyzer = new SemanticAnalyzer();
+                AstNode modifiedTree = analyzer.analyze(syntaxTree);
+                CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable());
+                generator.generate(modifiedTree);
+                OutputWriter writer = new OutputWriter();
+                writer.writePortableCode(config.portableCode(), generator.getInstructions());
+                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
+                System.out.println("Генерация трехадресного кода завершена успешно.");
+            } else if (config.isGen2Mode()) {
+                Parser parser = new Parser(lexer.getTokens());
+                AstNode syntaxTree = parser.parse();
+                SemanticAnalyzer analyzer = new SemanticAnalyzer();
+                AstNode modifiedTree = analyzer.analyze(syntaxTree);
+                PostfixGenerator generator = new PostfixGenerator();
+                OutputWriter writer = new OutputWriter();
+                writer.writePostfix(config.postfix(), generator.generate(modifiedTree));
+                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
+                System.out.println("Генерация постфиксной записи завершена успешно.");
             }
             return 0;
 

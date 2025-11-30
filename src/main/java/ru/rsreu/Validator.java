@@ -17,6 +17,8 @@ public class Validator {
             case LEX -> validateLexArgs(args);
             case SYN -> validateSynArgs(args);
             case SEM -> validateSemArgs(args);
+            case GEN1 -> validateGen1Args(args);
+            case GEN2 -> validateGen2Args(args);
         };
     }
 
@@ -35,7 +37,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.LEX, inputPath, Path.of(tokensFile), Path.of(symbolsFile), null);
+        return new AnalyzerConfig(AnalyzerMode.LEX, inputPath, Path.of(tokensFile), Path.of(symbolsFile), null, null, null);
     }
 
     private static AnalyzerConfig validateSynArgs(String[] args) {
@@ -51,7 +53,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile));
+        return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile), null, null);
     }
 
     private static AnalyzerConfig validateSemArgs(String[] args) {
@@ -68,7 +70,51 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile));
+        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile), null, null);
+    }
+
+    private static AnalyzerConfig validateGen1Args(String[] args) {
+        if (args.length != 2) {
+            throw new ValidationException("Для режима GEN1 ожидается 2 аргумента: режим и входной файл");
+        }
+
+        String inputFile = args[1];
+
+        validateFileName(inputFile);
+
+        Path inputPath = Path.of(inputFile);
+        ensureInputFileValid(inputPath);
+
+        return new AnalyzerConfig(
+                AnalyzerMode.GEN1,
+                inputPath,
+                null,
+                Path.of("symbols.txt"),
+                null,
+                Path.of("portable_code.txt"),
+                null);
+    }
+
+    private static AnalyzerConfig validateGen2Args(String[] args) {
+        if (args.length != 2) {
+            throw new ValidationException("Для режима GEN2 ожидается 2 аргумента: режим и входной файл");
+        }
+
+        String inputFile = args[1];
+
+        validateFileName(inputFile);
+
+        Path inputPath = Path.of(inputFile);
+        ensureInputFileValid(inputPath);
+
+        return new AnalyzerConfig(
+                AnalyzerMode.GEN2,
+                inputPath,
+                null,
+                Path.of("symbols.txt"),
+                null,
+                null,
+                Path.of("postfix.txt"));
     }
 
     private static void ensureInputFileValid(Path inputPath) {
