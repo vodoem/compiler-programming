@@ -5,15 +5,17 @@ import ru.rsreu.ast.BinaryAstNode;
 import ru.rsreu.ast.ConversionNode;
 import ru.rsreu.ast.OperandNode;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CodeGenerator {
     private final SymbolTable symbolTable;
+    private final boolean optimize;
     private final List<ThreeAddressInstruction> instructions = new ArrayList<>();
+    private final Map<VariableType, Deque<Identifier>> tempPool = new EnumMap<>(VariableType.class);
 
-    public CodeGenerator(SymbolTable symbolTable) {
+    public CodeGenerator(SymbolTable symbolTable, boolean optimize) {
         this.symbolTable = symbolTable;
+        this.optimize = optimize;
     }
 
     public List<ThreeAddressInstruction> generate(AstNode root) throws SemanticException {
@@ -32,9 +34,10 @@ public class CodeGenerator {
 
         if (node instanceof ConversionNode conversionNode) {
             ExpressionResult child = process(conversionNode.child());
-            Identifier temp = symbolTable.registerTemporary(VariableType.REAL);
+            Identifier temp = acquireTemporary(VariableType.REAL);
             String resultRef = formatIdentifier(temp.id());
             instructions.add(new ThreeAddressInstruction("i2f", resultRef, child.reference(), null));
+            releaseTemporary(child, resultRef);
             return new ExpressionResult(resultRef, VariableType.REAL);
         }
 
@@ -46,10 +49,12 @@ public class CodeGenerator {
                     ? VariableType.REAL
                     : VariableType.INTEGER;
 
-            Identifier temp = symbolTable.registerTemporary(resultType);
+            Identifier temp = acquireTemporary(resultType);
             String resultRef = formatIdentifier(temp.id());
             String opcode = toOpcode(binaryNode.operator().type());
             instructions.add(new ThreeAddressInstruction(opcode, resultRef, left.reference(), right.reference()));
+            releaseTemporary(left, resultRef);
+            releaseTemporary(right, resultRef);
             return new ExpressionResult(resultRef, resultType);
         }
 
@@ -81,6 +86,35 @@ public class CodeGenerator {
 
     private String formatIdentifier(int id) {
         return String.format("<id,%d>", id);
+    }
+
+    private Identifier acquireTemporary(VariableType type) {
+        if (!optimize) {
+            return symbolTable.registerTemporary(type);
+        }
+
+        Deque<Identifier> pool = tempPool.computeIfAbsent(type, t -> new ArrayDeque<>());
+        Identifier existing = pool.poll();
+        if (existing != null) {
+            return existing;
+        }
+        return symbolTable.registerTemporary(type);
+    }
+
+    private void releaseTemporary(ExpressionResult result, String preservedReference) {
+        if (!optimize) {
+            return;
+        }
+        String reference = result.reference();
+        if (reference.equals(preservedReference)) {
+            return;
+        }
+
+        Identifier identifier = symbolTable.findIdentifierByReference(reference);
+        if (identifier != null && identifier.name().startsWith("#T")) {
+            Deque<Identifier> pool = tempPool.computeIfAbsent(identifier.type(), t -> new ArrayDeque<>());
+            pool.offer(identifier);
+        }
     }
 
     private record ExpressionResult(String reference, VariableType type) {

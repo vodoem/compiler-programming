@@ -40,4 +40,35 @@ public class SymbolTable {
     public List<TableFields> getAll() {
         return Collections.unmodifiableList(identifiers);
     }
+
+    public Identifier findIdentifierByReference(String reference) {
+        Integer id = parseId(reference);
+        if (id == null) {
+            return null;
+        }
+        TableFields entry = getById(id);
+        if (entry == null) {
+            return null;
+        }
+        return new Identifier(entry.id(), entry.name(), entry.type());
+    }
+
+    private TableFields getById(int id) {
+        if (id <= 0 || id > identifiers.size()) {
+            return null;
+        }
+        return identifiers.get(id - 1);
+    }
+
+    private Integer parseId(String reference) {
+        if (reference == null || !reference.startsWith("<id,") || !reference.endsWith(">") || reference.length() < 6) {
+            return null;
+        }
+        try {
+            String numeric = reference.substring(4, reference.length() - 1);
+            return Integer.parseInt(numeric);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

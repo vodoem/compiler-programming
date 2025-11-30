@@ -9,7 +9,8 @@ public record AnalyzerConfig(
         Path symbols,
         Path syntaxTree,
         Path portableCode,
-        Path postfix
+        Path postfix,
+        boolean optimize
 ) {
     public boolean isLexMode() {
         return mode == AnalyzerMode.LEX;
@@ -29,5 +30,9 @@ public record AnalyzerConfig(
 
     public boolean isGen2Mode() {
         return mode == AnalyzerMode.GEN2;
+    }
+
+    public boolean optimize() {
+        return optimize;
     }
 }

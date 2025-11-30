@@ -37,7 +37,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.LEX, inputPath, Path.of(tokensFile), Path.of(symbolsFile), null, null, null);
+        return new AnalyzerConfig(AnalyzerMode.LEX, inputPath, Path.of(tokensFile), Path.of(symbolsFile), null, null, null, false);
     }
 
     private static AnalyzerConfig validateSynArgs(String[] args) {
@@ -53,7 +53,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile), null, null);
+        return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile), null, null, false);
     }
 
     private static AnalyzerConfig validateSemArgs(String[] args) {
@@ -70,15 +70,20 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile), null, null);
+        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile), null, null, false);
     }
 
     private static AnalyzerConfig validateGen1Args(String[] args) {
-        if (args.length != 2) {
-            throw new ValidationException("Для режима GEN1 ожидается 2 аргумента: режим и входной файл");
+        if (args.length < 2 || args.length > 3) {
+            throw new ValidationException("Для режима GEN1 ожидается 2 или 3 аргумента: режим, [OPT], входной файл");
         }
 
-        String inputFile = args[1];
+        boolean optimize = args.length == 3;
+        String inputFile = optimize ? args[2] : args[1];
+
+        if (optimize && !"opt".equalsIgnoreCase(args[1])) {
+            throw new ValidationException("Вторым параметром должен быть OPT или opt");
+        }
 
         validateFileName(inputFile);
 
@@ -92,15 +97,21 @@ public class Validator {
                 Path.of("symbols.txt"),
                 null,
                 Path.of("portable_code.txt"),
-                null);
+                null,
+                optimize);
     }
 
     private static AnalyzerConfig validateGen2Args(String[] args) {
-        if (args.length != 2) {
-            throw new ValidationException("Для режима GEN2 ожидается 2 аргумента: режим и входной файл");
+        if (args.length < 2 || args.length > 3) {
+            throw new ValidationException("Для режима GEN2 ожидается 2 или 3 аргумента: режим, [OPT], входной файл");
         }
 
-        String inputFile = args[1];
+        boolean optimize = args.length == 3;
+        String inputFile = optimize ? args[2] : args[1];
+
+        if (optimize && !"opt".equalsIgnoreCase(args[1])) {
+            throw new ValidationException("Вторым параметром должен быть OPT или opt");
+        }
 
         validateFileName(inputFile);
 
@@ -114,7 +125,8 @@ public class Validator {
                 Path.of("symbols.txt"),
                 null,
                 null,
-                Path.of("postfix.txt"));
+                Path.of("postfix.txt"),
+                optimize);
     }
 
     private static void ensureInputFileValid(Path inputPath) {

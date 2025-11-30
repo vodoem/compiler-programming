@@ -44,8 +44,9 @@ public class Main {
                 AstNode syntaxTree = parser.parse();
                 SemanticAnalyzer analyzer = new SemanticAnalyzer();
                 AstNode modifiedTree = analyzer.analyze(syntaxTree);
-                CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable());
-                generator.generate(modifiedTree);
+                AstNode optimizedTree = config.optimize() ? new AstOptimizer().optimize(modifiedTree) : modifiedTree;
+                CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable(), config.optimize());
+                generator.generate(optimizedTree);
                 OutputWriter writer = new OutputWriter();
                 writer.writePortableCode(config.portableCode(), generator.getInstructions());
                 writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
@@ -55,9 +56,10 @@ public class Main {
                 AstNode syntaxTree = parser.parse();
                 SemanticAnalyzer analyzer = new SemanticAnalyzer();
                 AstNode modifiedTree = analyzer.analyze(syntaxTree);
+                AstNode optimizedTree = config.optimize() ? new AstOptimizer().optimize(modifiedTree) : modifiedTree;
                 PostfixGenerator generator = new PostfixGenerator();
                 OutputWriter writer = new OutputWriter();
-                writer.writePostfix(config.postfix(), generator.generate(modifiedTree));
+                writer.writePostfix(config.postfix(), generator.generate(optimizedTree));
                 writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
                 System.out.println("Генерация постфиксной записи завершена успешно.");
             }
