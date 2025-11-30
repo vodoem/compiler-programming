@@ -21,21 +21,22 @@ public class AstOptimizer {
 
         if (node instanceof ConversionNode conversionNode) {
             OptimizationResult child = optimizeNode(conversionNode.child());
+
+            if (child.type() == VariableType.REAL) {
+                return child;
+            }
+
             if (child.isIntegerConstant()) {
                 double value = ((Integer) child.constant()).doubleValue();
                 return new OptimizationResult(createConstantNode(TokenType.REAL_CONST, value), VariableType.REAL, value);
             }
 
-            AstNode newNode = new ConversionNode(child.node());
-            Object constant = null;
             if (child.isConstant()) {
-                double value = child.type() == VariableType.INTEGER
-                        ? ((Integer) child.constant()).doubleValue()
-                        : (Double) child.constant();
-                constant = value;
-                newNode = createConstantNode(TokenType.REAL_CONST, value);
+                double value = toDouble(child.constant());
+                return new OptimizationResult(createConstantNode(TokenType.REAL_CONST, value), VariableType.REAL, value);
             }
-            return new OptimizationResult(newNode, VariableType.REAL, constant);
+
+            return new OptimizationResult(new ConversionNode(child.node()), VariableType.REAL, null);
         }
 
         if (node instanceof BinaryAstNode binaryNode) {
