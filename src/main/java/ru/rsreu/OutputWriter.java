@@ -58,4 +58,15 @@ public class OutputWriter {
         }
         Files.writeString(symbolsFile, sb.toString());
     }
+
+    public void writeCodeSymbols(Path symbolsFile, Iterable<TableFields> entries) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (TableFields entry : entries) {
+            sb.append(String.format("<id,%d> - %s, %s%n",
+                    entry.id(),
+                    entry.name(),
+                    entry.type().codeName()));
+        }
+        Files.writeString(symbolsFile, sb.toString());
+    }
 }

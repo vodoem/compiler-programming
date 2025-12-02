@@ -80,6 +80,18 @@ public class SymbolTable {
         return filtered;
     }
 
+    public List<TableFields> remapEntries(Map<Integer, Integer> idMapping) {
+        List<TableFields> remapped = new ArrayList<>();
+        for (TableFields entry : identifiers) {
+            Integer newId = idMapping.get(entry.id());
+            if (newId != null) {
+                remapped.add(new TableFields(newId, entry.name(), entry.type()));
+            }
+        }
+        remapped.sort(Comparator.comparingInt(TableFields::id));
+        return remapped;
+    }
+
     private Integer parseId(String reference) {
         if (reference == null || !reference.startsWith("<id,") || !reference.endsWith(">") || reference.length() < 6) {
             return null;
