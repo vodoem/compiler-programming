@@ -5,6 +5,9 @@ import ru.rsreu.ast.AstNode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Main {
 
@@ -48,8 +51,9 @@ public class Main {
                 CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable(), config.optimize());
                 generator.generate(optimizedTree);
                 OutputWriter writer = new OutputWriter();
-                writer.writePortableCode(config.portableCode(), generator.getInstructions());
-                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
+                List<ThreeAddressInstruction> instructions = generator.getInstructions();
+                writer.writePortableCode(config.portableCode(), instructions);
+                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable(), collectIdsFromInstructions(instructions, lexer.getSymbolTable()));
                 System.out.println("Генерация трехадресного кода завершена успешно.");
             } else if (config.isGen2Mode()) {
                 Parser parser = new Parser(lexer.getTokens());
@@ -59,8 +63,9 @@ public class Main {
                 AstNode optimizedTree = config.optimize() ? new AstOptimizer().optimize(modifiedTree) : modifiedTree;
                 PostfixGenerator generator = new PostfixGenerator();
                 OutputWriter writer = new OutputWriter();
-                writer.writePostfix(config.postfix(), generator.generate(optimizedTree));
-                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
+                List<String> postfix = generator.generate(optimizedTree);
+                writer.writePostfix(config.postfix(), postfix);
+                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable(), collectIdsFromPostfix(postfix, lexer.getSymbolTable()));
                 System.out.println("Генерация постфиксной записи завершена успешно.");
             }
             return 0;
@@ -102,5 +107,32 @@ public class Main {
         System.out.printf("Токенов: %d; Идентификаторов в таблице: %d%n",
                 lexer.getTokens().size(),
                 lexer.getSymbolTable().getAll().size());
+    }
+
+    private Iterable<Integer> collectIdsFromInstructions(List<ThreeAddressInstruction> instructions, SymbolTable symbolTable) {
+        Set<Integer> ids = new LinkedHashSet<>();
+        for (ThreeAddressInstruction instruction : instructions) {
+            addReference(instruction.result(), symbolTable, ids);
+            addReference(instruction.operand1(), symbolTable, ids);
+            if (instruction.operand2() != null && !instruction.operand2().isBlank()) {
+                addReference(instruction.operand2(), symbolTable, ids);
+            }
+        }
+        return ids;
+    }
+
+    private Iterable<Integer> collectIdsFromPostfix(List<String> postfix, SymbolTable symbolTable) {
+        Set<Integer> ids = new LinkedHashSet<>();
+        for (String token : postfix) {
+            addReference(token, symbolTable, ids);
+        }
+        return ids;
+    }
+
+    private void addReference(String reference, SymbolTable symbolTable, Set<Integer> ids) {
+        Integer id = symbolTable.extractId(reference);
+        if (id != null) {
+            ids.add(id);
+        }
     }
 }

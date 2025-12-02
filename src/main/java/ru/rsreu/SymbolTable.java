@@ -60,6 +60,26 @@ public class SymbolTable {
         return identifiers.get(id - 1);
     }
 
+    public Integer extractId(String reference) {
+        return parseId(reference);
+    }
+
+    public Iterable<TableFields> getByIds(Iterable<Integer> ids) {
+        Set<Integer> idSet = new HashSet<>();
+        for (Integer id : ids) {
+            if (id != null) {
+                idSet.add(id);
+            }
+        }
+        List<TableFields> filtered = new ArrayList<>();
+        for (TableFields entry : identifiers) {
+            if (idSet.contains(entry.id())) {
+                filtered.add(entry);
+            }
+        }
+        return filtered;
+    }
+
     private Integer parseId(String reference) {
         if (reference == null || !reference.startsWith("<id,") || !reference.endsWith(">") || reference.length() < 6) {
             return null;

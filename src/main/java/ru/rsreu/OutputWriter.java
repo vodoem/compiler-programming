@@ -41,8 +41,16 @@ public class OutputWriter {
     }
 
     public void writeCodeSymbols(Path symbolsFile, SymbolTable table) throws IOException {
+        writeCodeSymbols(symbolsFile, table, null);
+    }
+
+    public void writeCodeSymbols(Path symbolsFile, SymbolTable table, Iterable<Integer> idsToInclude) throws IOException {
         StringBuilder sb = new StringBuilder();
-        for (TableFields entry : table.getAll()) {
+        Iterable<TableFields> entries = idsToInclude == null
+                ? table.getAll()
+                : table.getByIds(idsToInclude);
+
+        for (TableFields entry : entries) {
             sb.append(String.format("<id,%d> - %s, %s%n",
                     entry.id(),
                     entry.name(),
