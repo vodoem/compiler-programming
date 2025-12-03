@@ -5,6 +5,12 @@ import ru.rsreu.ast.AstNode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class Main {
 
@@ -44,21 +50,31 @@ public class Main {
                 AstNode syntaxTree = parser.parse();
                 SemanticAnalyzer analyzer = new SemanticAnalyzer();
                 AstNode modifiedTree = analyzer.analyze(syntaxTree);
-                CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable());
-                generator.generate(modifiedTree);
+                AstNode optimizedTree = config.optimize() ? new AstOptimizer().optimize(modifiedTree) : modifiedTree;
+                CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable(), config.optimize());
+                generator.generate(optimizedTree);
                 OutputWriter writer = new OutputWriter();
-                writer.writePortableCode(config.portableCode(), generator.getInstructions());
-                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
+                List<ThreeAddressInstruction> instructions = generator.getInstructions();
+                Iterable<Integer> usedIds = collectIdsFromInstructions(instructions, lexer.getSymbolTable());
+                Map<Integer, Integer> idMapping = buildIdMapping(usedIds);
+                List<ThreeAddressInstruction> remappedInstructions = remapInstructions(instructions, idMapping, lexer.getSymbolTable());
+                writer.writePortableCode(config.portableCode(), remappedInstructions);
+                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable().remapEntries(idMapping));
                 System.out.println("Генерация трехадресного кода завершена успешно.");
             } else if (config.isGen2Mode()) {
                 Parser parser = new Parser(lexer.getTokens());
                 AstNode syntaxTree = parser.parse();
                 SemanticAnalyzer analyzer = new SemanticAnalyzer();
                 AstNode modifiedTree = analyzer.analyze(syntaxTree);
+                AstNode optimizedTree = config.optimize() ? new AstOptimizer().optimize(modifiedTree) : modifiedTree;
                 PostfixGenerator generator = new PostfixGenerator();
                 OutputWriter writer = new OutputWriter();
-                writer.writePostfix(config.postfix(), generator.generate(modifiedTree));
-                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable());
+                List<String> postfix = generator.generate(optimizedTree);
+                Iterable<Integer> usedIds = collectIdsFromPostfix(postfix, lexer.getSymbolTable());
+                Map<Integer, Integer> idMapping = buildIdMapping(usedIds);
+                List<String> remappedPostfix = remapPostfix(postfix, idMapping, lexer.getSymbolTable());
+                writer.writePostfix(config.postfix(), remappedPostfix);
+                writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable().remapEntries(idMapping));
                 System.out.println("Генерация постфиксной записи завершена успешно.");
             }
             return 0;
@@ -100,5 +116,75 @@ public class Main {
         System.out.printf("Токенов: %d; Идентификаторов в таблице: %d%n",
                 lexer.getTokens().size(),
                 lexer.getSymbolTable().getAll().size());
+    }
+
+    private Iterable<Integer> collectIdsFromInstructions(List<ThreeAddressInstruction> instructions, SymbolTable symbolTable) {
+        Set<Integer> ids = new LinkedHashSet<>();
+        for (ThreeAddressInstruction instruction : instructions) {
+            addReference(instruction.result(), symbolTable, ids);
+            addReference(instruction.operand1(), symbolTable, ids);
+            if (instruction.operand2() != null && !instruction.operand2().isBlank()) {
+                addReference(instruction.operand2(), symbolTable, ids);
+            }
+        }
+        return ids;
+    }
+
+    private Iterable<Integer> collectIdsFromPostfix(List<String> postfix, SymbolTable symbolTable) {
+        Set<Integer> ids = new LinkedHashSet<>();
+        for (String token : postfix) {
+            addReference(token, symbolTable, ids);
+        }
+        return ids;
+    }
+
+    private Map<Integer, Integer> buildIdMapping(Iterable<Integer> usedIds) {
+        Map<Integer, Integer> mapping = new LinkedHashMap<>();
+        TreeSet<Integer> sorted = new TreeSet<>();
+        for (Integer id : usedIds) {
+            if (id != null) {
+                sorted.add(id);
+            }
+        }
+        int nextId = 1;
+        for (Integer oldId : sorted) {
+            mapping.put(oldId, nextId++);
+        }
+        return mapping;
+    }
+
+    private List<ThreeAddressInstruction> remapInstructions(List<ThreeAddressInstruction> instructions, Map<Integer, Integer> idMapping, SymbolTable symbolTable) {
+        return instructions.stream()
+                .map(instr -> new ThreeAddressInstruction(
+                        instr.opcode(),
+                        remapReference(instr.result(), idMapping, symbolTable),
+                        remapReference(instr.operand1(), idMapping, symbolTable),
+                        instr.operand2() == null ? null : remapReference(instr.operand2(), idMapping, symbolTable)))
+                .toList();
+    }
+
+    private List<String> remapPostfix(List<String> postfix, Map<Integer, Integer> idMapping, SymbolTable symbolTable) {
+        return postfix.stream()
+                .map(token -> remapReference(token, idMapping, symbolTable))
+                .toList();
+    }
+
+    private void addReference(String reference, SymbolTable symbolTable, Set<Integer> ids) {
+        Integer id = symbolTable.extractId(reference);
+        if (id != null) {
+            ids.add(id);
+        }
+    }
+
+    private String remapReference(String reference, Map<Integer, Integer> idMapping, SymbolTable symbolTable) {
+        Integer id = symbolTable.extractId(reference);
+        if (id == null) {
+            return reference;
+        }
+        Integer newId = idMapping.get(id);
+        if (newId == null) {
+            return reference;
+        }
+        return String.format("<id,%d>", newId);
     }
 }
