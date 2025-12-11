@@ -1,6 +1,7 @@
 package ru.rsreu;
 
 import ru.rsreu.ast.AstNode;
+import ru.rsreu.io.PostCodeBinaryWriter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -76,6 +77,21 @@ public class Main {
                 writer.writePostfix(config.postfix(), remappedPostfix);
                 writer.writeCodeSymbols(config.symbols(), lexer.getSymbolTable().remapEntries(idMapping));
                 System.out.println("Генерация постфиксной записи завершена успешно.");
+            } else if (config.isGen3Mode()) {
+                Parser parser = new Parser(lexer.getTokens());
+                AstNode syntaxTree = parser.parse();
+                SemanticAnalyzer analyzer = new SemanticAnalyzer();
+                AstNode modifiedTree = analyzer.analyze(syntaxTree);
+                AstNode optimizedTree = config.optimize() ? new AstOptimizer().optimize(modifiedTree) : modifiedTree;
+                CodeGenerator generator = new CodeGenerator(lexer.getSymbolTable(), config.optimize());
+                generator.generate(optimizedTree);
+                List<ThreeAddressInstruction> instructions = generator.getInstructions();
+                Iterable<Integer> usedIds = collectIdsFromInstructions(instructions, lexer.getSymbolTable());
+                Map<Integer, Integer> idMapping = buildIdMapping(usedIds);
+                List<ThreeAddressInstruction> remappedInstructions = remapInstructions(instructions, idMapping, lexer.getSymbolTable());
+                List<TableFields> remappedSymbols = lexer.getSymbolTable().remapEntries(idMapping);
+                new PostCodeBinaryWriter().write(config.postCodeBinary(), remappedInstructions, remappedSymbols);
+                System.out.println("Бинарный файл промежуточного кода создан успешно.");
             }
             return 0;
 
