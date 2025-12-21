@@ -10,6 +10,7 @@ public record AnalyzerConfig(
         Path syntaxTree,
         Path portableCode,
         Path postfix,
+        Path postCodeBinary,
         boolean optimize
 ) {
     public boolean isLexMode() {
@@ -30,6 +31,10 @@ public record AnalyzerConfig(
 
     public boolean isGen2Mode() {
         return mode == AnalyzerMode.GEN2;
+    }
+
+    public boolean isGen3Mode() {
+        return mode == AnalyzerMode.GEN3;
     }
 
     public boolean optimize() {

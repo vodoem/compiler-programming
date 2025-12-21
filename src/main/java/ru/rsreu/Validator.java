@@ -19,6 +19,7 @@ public class Validator {
             case SEM -> validateSemArgs(args);
             case GEN1 -> validateGen1Args(args);
             case GEN2 -> validateGen2Args(args);
+            case GEN3 -> validateGen3Args(args);
         };
     }
 
@@ -37,7 +38,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.LEX, inputPath, Path.of(tokensFile), Path.of(symbolsFile), null, null, null, false);
+        return new AnalyzerConfig(AnalyzerMode.LEX, inputPath, Path.of(tokensFile), Path.of(symbolsFile), null, null, null, null, false);
     }
 
     private static AnalyzerConfig validateSynArgs(String[] args) {
@@ -53,7 +54,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile), null, null, false);
+        return new AnalyzerConfig(AnalyzerMode.SYN, inputPath, null, null, Path.of(treeFile), null, null, null, false);
     }
 
     private static AnalyzerConfig validateSemArgs(String[] args) {
@@ -70,7 +71,7 @@ public class Validator {
         Path inputPath = Path.of(inputFile);
         ensureInputFileValid(inputPath);
 
-        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile), null, null, false);
+        return new AnalyzerConfig(AnalyzerMode.SEM, inputPath, null, null, Path.of(treeFile), null, null, null, false);
     }
 
     private static AnalyzerConfig validateGen1Args(String[] args) {
@@ -97,6 +98,7 @@ public class Validator {
                 Path.of("symbols.txt"),
                 null,
                 Path.of("portable_code.txt"),
+                null,
                 null,
                 optimize);
     }
@@ -126,6 +128,36 @@ public class Validator {
                 null,
                 null,
                 Path.of("postfix.txt"),
+                null,
+                optimize);
+    }
+
+    private static AnalyzerConfig validateGen3Args(String[] args) {
+        if (args.length < 2 || args.length > 3) {
+            throw new ValidationException("Для режима GEN3 ожидается 2 или 3 аргумента: режим, [OPT], входной файл");
+        }
+
+        boolean optimize = args.length == 3;
+        String inputFile = optimize ? args[2] : args[1];
+
+        if (optimize && !"opt".equalsIgnoreCase(args[1])) {
+            throw new ValidationException("Вторым параметром должен быть OPT или opt");
+        }
+
+        validateFileName(inputFile);
+
+        Path inputPath = Path.of(inputFile);
+        ensureInputFileValid(inputPath);
+
+        return new AnalyzerConfig(
+                AnalyzerMode.GEN3,
+                inputPath,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Path.of("post_code.bin"),
                 optimize);
     }
 
